@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AttendanceTable from '../components/AttendanceTable';
 import MarkAttendanceModal from '../components/MarkAttendanceModal';
 import PunchInOutCards from '../components/PunchInOutCards';
@@ -44,7 +44,6 @@ const EmployeeDashboard = () => {
         });
     }, [attendanceRecords, userId]);
 
-    // Get today's record
     const todayRecord = useMemo(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -56,7 +55,6 @@ const EmployeeDashboard = () => {
         });
     }, [personalRecords]);
 
-    // Check if today is Sunday
     const isSunday = new Date().getDay() === 0;
     const isPunchedIn = todayRecord?.punchIn?.time;
     const isPunchedOut = todayRecord?.punchOut?.time;
@@ -73,20 +71,21 @@ const EmployeeDashboard = () => {
         };
     }, [personalRecords]);
 
-  const handleSuccess = async () => {
-    setFilterDate('');
-    setFilterMonth('');
-    setLoading(true);
-    setError('');
-    try {
-        const records = await fetchAttendanceRecords(undefined, undefined);
-        setAttendanceRecords(records);
-    } catch (err) {
-        setError(err?.message || 'Unable to load attendance records.');
-    } finally {
-        setLoading(false);
-    }
-};
+    const handleSuccess = async () => {
+        setFilterDate('');
+        setFilterMonth('');
+        setLoading(true);
+        setError('');
+        try {
+            const records = await fetchAttendanceRecords(undefined, undefined);
+            setAttendanceRecords(records);
+        } catch (err) {
+            setError(err?.message || 'Unable to load attendance records.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const getCurrentDateString = () => {
         const today = new Date();
         const year = today.getFullYear();
@@ -125,12 +124,13 @@ const EmployeeDashboard = () => {
                             <p className="punch-time">Punched in at {new Date(todayRecord.punchIn.time).toLocaleTimeString()}</p>
                         )}
                     </div>
+                    {/* ← Loading pe button disabled */}
                     <button
-                        className={`button button--${isSunday || isPunchedOut ? 'disabled' : 'primary'}`}
-                        onClick={() => setShowModal(true)}
-                        disabled={isSunday || isPunchedOut}
+                        className={`button button--${isSunday || isPunchedOut || loading ? 'disabled' : 'primary'}`}
+                        onClick={() => !loading && setShowModal(true)}
+                        disabled={isSunday || isPunchedOut || loading}
                     >
-                        {isPunchedIn ? '👋 Punch Out' : '✋ Punch In'}
+                        {loading ? '⏳ Loading...' : isPunchedIn ? '👋 Punch Out' : '✋ Punch In'}
                     </button>
                 </div>
             )}
@@ -180,7 +180,6 @@ const EmployeeDashboard = () => {
                             <p>Filter by month or date to view your history.</p>
                         </div>
 
-                        {/* Filters */}
                         <div className="filter-row">
                             <div className="filter-group">
                                 <label htmlFor="filter-month">Filter by month</label>
@@ -240,5 +239,3 @@ const EmployeeDashboard = () => {
 };
 
 export default EmployeeDashboard;
-
-
