@@ -111,6 +111,7 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
             const payload = {
                 latitude: location.latitude,
                 longitude: location.longitude,
+                locationName: locationName,
                 photo,
             };
 
