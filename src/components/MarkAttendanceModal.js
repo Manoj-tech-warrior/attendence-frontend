@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { punchIn, punchOut } from '../api/attendanceApi';
 
 const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
@@ -15,7 +15,6 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
 
         const init = async () => {
             try {
-                // ðŸŽ¥ Start Camera
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
@@ -27,7 +26,6 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
                     setStreamActive(true);
                 }
 
-                // ðŸ“ Get Location
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
@@ -52,7 +50,6 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
 
         init();
 
-        // ðŸ§¹ Cleanup
         return () => {
             if (videoElement && videoElement.srcObject) {
                 videoElement.srcObject.getTracks().forEach(track => track.stop());
@@ -66,8 +63,12 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
             canvasRef.current.width = videoRef.current.videoWidth;
             canvasRef.current.height = videoRef.current.videoHeight;
             context.drawImage(videoRef.current, 0, 0);
-            const photoData = canvasRef.current.toDataURL('image/jpeg');
+            const photoData = canvasRef.current.toDataURL('image/jpeg', 0.5);
             setPhoto(photoData);
+
+            if (videoRef.current.srcObject) {
+                videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+            }
         }
     };
 
@@ -78,7 +79,7 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
         }
 
         if (!location) {
-            setError('Location not available');
+            setError('Location not available. Please wait or enable location.');
             return;
         }
 
@@ -101,7 +102,8 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
             onSuccess();
             onClose();
         } catch (err) {
-            setError(err?.message || 'Something went wrong');
+            const msg = err?.data?.message || err?.message || err || 'Something went wrong';
+            setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
         } finally {
             setLoading(false);
         }
@@ -109,9 +111,17 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
 
     const retakePhoto = () => {
         setPhoto(null);
-        if (videoRef.current) {
-            videoRef.current.play();
-        }
+        navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+        }).then(stream => {
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.play();
+                setStreamActive(true);
+            }
+        }).catch(() => {
+            setError('Camera access denied.');
+        });
     };
 
     return (
@@ -119,7 +129,7 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
             <div className="modal-content mark-attendance-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>{isPunchedIn ? 'Punch Out' : 'Punch In'}</h2>
-                    <button className="close-btn" onClick={onClose}>Ã—</button>
+                    <button className="close-btn" onClick={onClose}>×</button>
                 </div>
 
                 {error && <div className="alert alert--error">{error}</div>}
@@ -139,7 +149,7 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
                     <div className="location-info">
                         {location ? (
                             <>
-                                <p>ðŸ“ Location Detected</p>
+                                <p>📍 Location Detected</p>
                                 <p>Lat: {location.latitude.toFixed(6)}</p>
                                 <p>Lng: {location.longitude.toFixed(6)}</p>
                             </>
@@ -149,16 +159,65 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
                     </div>
                 </div>
 
-                <div className="modal-footer">
+                <div className="modal-footer" style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    padding: '16px'
+                }}>
                     {!photo ? (
-                        <button onClick={capturePhoto} disabled={!streamActive || loading}>
-                            ðŸ“· Capture
+                        <button
+                            onClick={capturePhoto}
+                            disabled={!streamActive || loading}
+                            style={{
+                                backgroundColor: '#3B82F6',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '12px',
+                                padding: '14px',
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                width: '100%'
+                            }}
+                        >
+                            📷 Capture
                         </button>
                     ) : (
                         <>
-                            <button onClick={retakePhoto} disabled={loading}>Retake</button>
-                            <button onClick={handleSubmit} disabled={loading || !location}>
-                                {loading ? 'Saving...' : 'Confirm'}
+                            <button
+                                onClick={retakePhoto}
+                                disabled={loading}
+                                style={{
+                                    backgroundColor: 'white',
+                                    color: '#EF4444',
+                                    border: '2px solid #EF4444',
+                                    borderRadius: '12px',
+                                    padding: '14px',
+                                    fontSize: '16px',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    width: '100%'
+                                }}
+                            >
+                                🔄 Retake
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={loading || !location}
+                                style={{
+                                    backgroundColor: loading ? '#9CA3AF' : '#22C55E',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    padding: '14px',
+                                    fontSize: '16px',
+                                    fontWeight: '600',
+                                    cursor: loading ? 'not-allowed' : 'pointer',
+                                    width: '100%'
+                                }}
+                            >
+                                {loading ? '⏳ Saving...' : '✅ Confirm'}
                             </button>
                         </>
                     )}
