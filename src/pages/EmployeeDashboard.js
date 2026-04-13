@@ -73,12 +73,20 @@ const EmployeeDashboard = () => {
         };
     }, [personalRecords]);
 
-    const handleSuccess = () => {
-        // Reload today's records
-        setFilterDate('');
-        setFilterMonth('');
-    };
-
+  const handleSuccess = async () => {
+    setFilterDate('');
+    setFilterMonth('');
+    setLoading(true);
+    setError('');
+    try {
+        const records = await fetchAttendanceRecords(undefined, undefined);
+        setAttendanceRecords(records);
+    } catch (err) {
+        setError(err?.message || 'Unable to load attendance records.');
+    } finally {
+        setLoading(false);
+    }
+};
     const getCurrentDateString = () => {
         const today = new Date();
         const year = today.getFullYear();
