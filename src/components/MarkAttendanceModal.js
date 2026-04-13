@@ -6,6 +6,7 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
     const [error, setError] = useState('');
     const [photo, setPhoto] = useState(null);
     const [location, setLocation] = useState(null);
+    const [locationName, setLocationName] = useState('');
     const canvasRef = useRef(null);
     const videoRef = useRef(null);
     const [streamActive, setStreamActive] = useState(false);
@@ -29,11 +30,27 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+
                             setLocation({
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude,
+                                latitude: lat,
+                                longitude: lng,
                                 accuracy: position.coords.accuracy,
                             });
+
+                            // Location name fetch karo
+                            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+                                .then(res => res.json())
+                                .then(data => {
+                                    const city = data.address?.city ||
+                                        data.address?.town ||
+                                        data.address?.village ||
+                                        data.address?.county || '';
+                                    const state = data.address?.state || '';
+                                    setLocationName(`${city}, ${state}`);
+                                })
+                                .catch(() => setLocationName(''));
                         },
                         () => {
                             setError('Unable to get location. Please enable location.');
@@ -149,12 +166,12 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
                     <div className="location-info">
                         {location ? (
                             <>
-                                <p>📍 Location Detected</p>
+                                <p>📍 {locationName || 'Location Detected'}</p>
                                 <p>Lat: {location.latitude.toFixed(6)}</p>
                                 <p>Lng: {location.longitude.toFixed(6)}</p>
                             </>
                         ) : (
-                            <p>Getting location...</p>
+                            <p>📍 Getting location...</p>
                         )}
                     </div>
                 </div>
