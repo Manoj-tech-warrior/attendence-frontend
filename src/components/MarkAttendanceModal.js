@@ -122,7 +122,7 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
             }
 
             onSuccess();
-            onClose();
+            
         } catch (err) {
             const msg = err?.data?.message || err?.message || err || 'Something went wrong';
             setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
