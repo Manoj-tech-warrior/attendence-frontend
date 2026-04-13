@@ -39,16 +39,20 @@ const MarkAttendanceModal = ({ onClose, onSuccess, isPunchedIn }) => {
                                 accuracy: position.coords.accuracy,
                             });
 
-                            // Location name fetch karo
                             fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
                                 .then(res => res.json())
                                 .then(data => {
+                                    const locality = data.address?.suburb ||
+                                        data.address?.neighbourhood ||
+                                        data.address?.locality ||
+                                        data.address?.road || '';
                                     const city = data.address?.city ||
                                         data.address?.town ||
                                         data.address?.village ||
                                         data.address?.county || '';
                                     const state = data.address?.state || '';
-                                    setLocationName(`${city}, ${state}`);
+                                    const parts = [locality, city, state].filter(Boolean);
+                                    setLocationName(parts.join(', '));
                                 })
                                 .catch(() => setLocationName(''));
                         },
