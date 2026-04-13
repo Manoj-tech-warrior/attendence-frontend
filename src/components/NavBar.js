@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/auth';
 
@@ -35,15 +35,29 @@ const NavBar = () => {
                     aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
                     aria-expanded={menuOpen}
                 >
-                    <span>{menuOpen ? 'âœ•' : 'â˜°'}</span>
+                    <span>{menuOpen ? '✕' : '☰'}</span>
                 </button>
 
                 <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
                     {user ? (
                         <>
-                            <span className="navbar__profile">{user.name ? `${user.name} â€¢ ${user.role}` : `${user.role}`}</span>
-                            <Link to={user.role === 'Admin' ? '/admin' : '/employee'} className="navbar__link" onClick={closeMenu}>
+                            <span className="navbar__profile">
+                                {user.name ? `${user.name} • ${user.role}` : `${user.role}`}
+                            </span>
+                            <Link
+                                to={user.role === 'Admin' ? '/admin' : '/employee'}
+                                className={`navbar__link ${isActive('/admin') || isActive('/employee') ? 'active' : ''}`}
+                                onClick={closeMenu}
+                            >
                                 Dashboard
+                            </Link>
+                            {/* ← Profile Link add kiya */}
+                            <Link
+                                to="/profile"
+                                className={`navbar__link ${isActive('/profile') ? 'active' : ''}`}
+                                onClick={closeMenu}
+                            >
+                                👤 Profile
                             </Link>
                             <button onClick={handleLogout} className="nav-button">
                                 Logout
@@ -66,4 +80,3 @@ const NavBar = () => {
 };
 
 export default NavBar;
-
