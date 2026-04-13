@@ -20,7 +20,6 @@ const EmployeeDashboard = () => {
         const loadAttendance = async () => {
             setLoading(true);
             setError('');
-
             try {
                 const records = await fetchAttendanceRecords(filterDate || undefined, filterMonth || undefined);
                 setAttendanceRecords(records);
@@ -30,7 +29,6 @@ const EmployeeDashboard = () => {
                 setLoading(false);
             }
         };
-
         loadAttendance();
     }, [filterDate, filterMonth]);
 
@@ -47,7 +45,6 @@ const EmployeeDashboard = () => {
     const todayRecord = useMemo(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
         return personalRecords.find((record) => {
             const recordDate = new Date(record.date);
             recordDate.setHours(0, 0, 0, 0);
@@ -72,6 +69,7 @@ const EmployeeDashboard = () => {
     }, [personalRecords]);
 
     const handleSuccess = async () => {
+        setShowModal(false); // ← Pehle modal band karo
         setFilterDate('');
         setFilterMonth('');
         setLoading(true);
@@ -112,7 +110,6 @@ const EmployeeDashboard = () => {
 
             {error && <div className="alert alert--error">{error}</div>}
 
-            {/* Today's Status Card */}
             {!isSunday && (
                 <div className="today-status-card">
                     <div className="status-content">
@@ -124,7 +121,6 @@ const EmployeeDashboard = () => {
                             <p className="punch-time">Punched in at {new Date(todayRecord.punchIn.time).toLocaleTimeString()}</p>
                         )}
                     </div>
-                    {/* ← Loading pe button disabled */}
                     <button
                         className={`button button--${isSunday || isPunchedOut || loading ? 'disabled' : 'primary'}`}
                         onClick={() => !loading && setShowModal(true)}
@@ -135,7 +131,6 @@ const EmployeeDashboard = () => {
                 </div>
             )}
 
-            {/* Sunday Notification */}
             {isSunday && (
                 <div className="alert alert--info">
                     🎉 Today is a Sunday - Weekly Off
@@ -146,7 +141,6 @@ const EmployeeDashboard = () => {
                 <div className="page-loader">Loading attendance records...</div>
             ) : (
                 <>
-                    {/* Summary Cards */}
                     <div className="dashboard-grid employee-grid">
                         <div className="stat-card">
                             <p className="stat-card__label">Total days tracked</p>
@@ -162,7 +156,6 @@ const EmployeeDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Today's Punch In/Out Cards */}
                     {todayRecord && (
                         <section className="dashboard-section">
                             <div className="section-header">
@@ -173,7 +166,6 @@ const EmployeeDashboard = () => {
                         </section>
                     )}
 
-                    {/* Attendance Records with Filters */}
                     <section className="dashboard-section">
                         <div className="section-header">
                             <h2>Your attendance records</h2>
@@ -226,7 +218,6 @@ const EmployeeDashboard = () => {
                 </>
             )}
 
-            {/* Mark Attendance Modal */}
             {showModal && (
                 <MarkAttendanceModal
                     onClose={() => setShowModal(false)}
